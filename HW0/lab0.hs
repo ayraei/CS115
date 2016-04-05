@@ -11,8 +11,7 @@ no response
 no response
 no response
 
-The version number for the operating system has changed to a more
-recent version.
+The version number for the Linux kernel has changed to a more recent version.
 -}
 
 -- Question 3
