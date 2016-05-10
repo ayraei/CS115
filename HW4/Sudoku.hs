@@ -55,32 +55,40 @@ readSudoku f = do
 -- Return True if a solution is found, else false.
 -- If a solution is found, the board contents will have mutated to the solution.
 solveSudoku :: Sudoku -> IO Bool
-solveSudoku s =
+{-
+solveSudoku s = iter s (0, 0)
   where
     -- Solve a Sudoku board starting from location (i, j).
     -- All "previous" locations are assumed to have been filled.
     -- If the board is solveable, return True; if not, return False.
     -- In the latter case the board will not have changed.
     iter :: Sudoku -> (Int, Int) -> IO Bool
+    iter s (x, y) = 
 
     -- Try to solve the board using all possible currently-valid
     -- values at a particular location.
     -- If the board is unsolveable, reset the location to a zero
     -- (unmake the move) and return False.
     iter' :: Sudoku -> (Int, Int) -> [Int] -> IO Bool
+    iter' s (x, y) validMoves =
 
     -- Get a list of indices that could be in a particular location on the 
     -- board (no conflicts in row, column, or box).
     getOKValues :: Sudoku -> (Int, Int) -> IO [Int]
+    getOKValues s (x, y) =
 
     -- Return the ith row in a Sudoku board as a list of Ints.
     getRow :: Sudoku -> Int -> IO [Int]
+    getRow s row = [readArray |
 
     -- Return the ith column in a Sudoku board as a list of Ints.
     getCol :: Sudoku -> Int -> IO [Int]
+    getCol s col = [readArray |
 
     -- Return the box covering location (i, j) as a list of Ints.
     getBox :: Sudoku -> (Int, Int) -> IO [Int]
+    getBox s (x, y) = 
+-}
 
 -- Print a Sudoku board to stdout.
 printSudoku :: Sudoku -> IO ()
