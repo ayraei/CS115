@@ -18,11 +18,8 @@ infixr 3 ^||
 -- Computes the product of all integers between x and y (inclusive)
 rangeProduct :: Integer -> Integer -> Integer
 rangeProduct x y | x > y = error "First argument cannot be less than second."
-                 | otherwise = iter x y 1
-                     where
-                       iter :: Integer -> Integer -> Integer -> Integer
-                       iter x y prod | x == y    = prod * y
-                                     | otherwise = iter x (y - 1) (prod * y)
+                 | x == y = y
+                 | otherwise = x * rangeProduct (x + 1) y
 
 -- Question 3
 
@@ -73,9 +70,9 @@ Evaluation of point-free dot lst1 lst2
 
 -- Question 5
 
--- Computes the sum of the numbers [0, 1000] which are multiples of 3 or 5
-ans1 = sum [x | x <- [0..1000], mod x 3 == 0 || mod x 5 == 0]
--- ans1 = 234168
+-- Computes the sum of the numbers [0, 999] which are multiples of 3 or 5
+ans1 = sum [x | x <- [0..999], mod x 3 == 0 || mod x 5 == 0]
+-- ans1 = 233168
 
 -- Question 6
 
@@ -115,10 +112,11 @@ largest [x] = x
 largest (x:xs) = max x (largest xs)
 
 {-
-It would be more natural to use pattern matching and match directly on the
-argument to 'largest', instead of the head and tail functions. So, we changed
-the arguments for the top two cases to use pattern matching instead of checking
-length, and we changed the general case to use (x:xs).
+It would be more natural and efficient to use pattern matching and match
+directly on the argument to 'largest', instead of the head and tail
+functions. So, we changed the arguments for the top two cases to use
+pattern matching instead of checking length, and we changed the general
+case to use (x:xs).
 -}
 
 -- PART C
@@ -193,12 +191,12 @@ Evaluate reverse [1,2,3]
 --> 3:[2,1]
 --> [3,2,1]
 
-The asymptotic time complexity of the function is O(2n), where n is
+The asymptotic time complexity of the function is O(n), where n is
 the length of the list. Essentially there are two passes through the full
 list. In the first pass, each subsequent element is removed from the original
 list and cons'd to the beginning of the reversed list. In the second pass,
 all the cons calls are evaluated to generate the final list. Additionally,
-the two passes cannot be performed at the same time, so we have 2n.
+the two passes cannot be performed at the same time, so we have 2n --> O(n).
 -}
 
 -- Question 4
@@ -223,7 +221,7 @@ Evaluate reverse [1, 2, 3]
 
 For a list of length n, there are n + 1 substitutions of the recursive case
 of reverse, and n append operations. These operations must be performed
-sequentially, so this definition is O(2n).
+sequentially, so this definition requires ~2n operations --> O(n).
 -}
 
 -- Question 5
@@ -248,6 +246,8 @@ Evaluate head (isort [3, 1, 2, 5, 4])
 --> head (insert 3 (insert 1 (insert 2 (isort [5, 4]))))
 --> head (insert 3 (insert 1 (insert 2 (insert 5 (isort [4])))))
 --> head (insert 3 (insert 1 (insert 2 (insert 5 (insert 4 (isort []))))))
+--> head (insert 3 (insert 1 (insert 2 (insert 5 (insert 4 [])))))
+--> head (insert 3 (insert 1 (insert 2 (insert 5 [4]))))
 --> head (insert 3 (insert 1 (insert 2 (4 : insert 5 []))))
 --> head (insert 3 (insert 1 (insert 2 (4 : [5]))))
 --> head (insert 3 (insert 1 (insert 2 [4, 5])))
@@ -273,14 +273,14 @@ foldl f init (x:xs) = foldl f (f init x) xs
 Evaluate foldr max 0 [1, 5, 3, -2, 4]
 --> max 1 (foldr max 0 [5, 3, -2, 4])
 --> max 1 (max 5 (foldr max 0 [3, -2, 4]))
---> max 5 (foldr max 0 [3, -2, 4])
---> max 5 (max 3 (foldr max 0 [-2, 4]))
---> max 5 (foldr max 0 [-2, 4])
---> max 5 (max -2 (foldr max 0 [4]))
---> max 5 (foldr max 0 [4])
---> max 5 (max 4 (foldr max 0 []))
---> max 5 (foldr max 0 [])
---> max 5 0
+--> max 1 (max 5 (max 3 (foldr max 0 [-2, 4])))
+--> max 1 (max 5 (max 3 (max -2 (foldr max 0 [4]))))
+--> max 1 (max 5 (max 3 (max -2 (max 4 (foldr max 0 [])))))
+--> max 1 (max 5 (max 3 (max -2 (max 4 0))))
+--> max 1 (max 5 (max 3 (max -2 4)))
+--> max 1 (max 5 (max 3 4))
+--> max 1 (max 5 4)
+--> max 1 5
 --> 5
 
 Evaluate foldl max 0 [1, 5, 3, -2, 4]
@@ -296,8 +296,8 @@ Evaluate foldl max 0 [1, 5, 3, -2, 4]
 --> max 5 4
 --> 5
 
-In foldr, we don't have to chain as many invocations of 'max' as with foldl,
-since foldl waits until that term needs to be evaluated to actually reduce
-the entire expression. Thus the space complexity of foldl is larger than
-that of foldr.
+
+The space complexity of foldr can be smaller than that of foldl if the
+argument f given to foldr can be lazily evaluated. The function max cannot be
+lazily evaluated, so here there is no difference between the two evaluations.
 -}
