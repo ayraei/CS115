@@ -43,12 +43,19 @@ underThousand' =
 
 -- Finds the largest palindrome made from the product of two 3-digit numbers.
 -- Returns a 3-tuple of the two 3-digit numbers, then the palindrome.
-palindromeFromSum :: (Integer, Integer, Integer)
-
+largestPalindrome :: (Integer, Integer, Integer)
+largestPalindrome =
+  maximum $ do
+    i <- [100..999]
+    j <- [100..999]
+    guard $ isPalindrome (i * j)
+    return (i, j, i * j)
+    
 -- Returns True if the integer is a palindrome.
 isPalindrome :: Integer -> Bool
+isPalindrome x = reverse (show x) == show x
 
--- The solution: TODO
+-- The solution: 995 * 583 = 580085
 
 -- Question 4
 
@@ -72,18 +79,35 @@ ops = [O Add, O Sub, O Cat]
 -- List of all possible valid expressions from the puzzle description
 exprs :: [Expr]
 exprs =
+  do
+    a <- ops
+    b <- ops
+    c <- ops
+    d <- ops
+    e <- ops
+    f <- ops
+    g <- ops
+    h <- ops
+    return [N 1, a, N 2, b, N 3, c, N 4, d, N 5, e, N 6, f, N 7, g, N 8, h, N 9]
 
 -- Part 2
 
 -- Takes an expression and removes all instances of Cat operator
 normalize :: Expr -> Expr
-normalize =
+normalize ((N a) : (O Cat) : (N b) : xs) =
+  normalize ((N (a * 10 + b)) : xs)
+normalize (x1@(N _) : x2@(O _) : xs) = x1 : x2 : normalize xs
+normalize x@((N _) : []) = x
+normalize _ = error "Invalid expression encountered"
 
 -- Part 3
 
 -- Takes a normalize expression and evaluates it to an Int
 evaluate :: Expr -> Int
-evaluate =
+evaluate ((N a) : xs) = a + evaluate xs
+evaluate ((O Add) : (N a) : xs) = a + evaluate xs
+evaluate ((O Sub) : (N a) : xs) = (-a) + evaluate xs
+evaluate _ = 0
 
 -- Given as part of the assignment
 
@@ -116,6 +140,12 @@ do n1 <- [1..6]
    return (n1, n2)
 
 evaluate to []? Show all the steps in your derivation.
+
+Desugar into:
+[1..6] >>= \n1 -> ([1..6] >>= \n2 -> [] >>= return)
+
+The [] becomes the argument for the return, so the entire expression evaluates
+to [].
 -}
 
 -- Question 2
@@ -136,6 +166,15 @@ do n1 <- [1..6]
 
 ? Answer this by reducing both expressions to the same expression.
 Show all the steps in your derivations.
+
+The first expression desugars into:
+[1..6] >>= \n1 ([1..6] >>= \n2 -> <anything> >>= return)
+
+The second expression desugars into:
+[1..6] >>= \n1 ([1..6] >>= \n2 >>= return)
+
+We see that both of the expressions pass all tuples through to the final
+return statement.
 -}
 
 -- Question 3
@@ -164,6 +203,23 @@ fail s = error s
 
 Don't forget that the String datatype in Haskell is just a list of
 Chars i.e. [Char].
+
+Desugar this expression into:
+["aaxybb", "aazwbb", "foobar", "aaccbb", "baz"] >>=
+  \y -> case y of
+    ('a' : 'a' : c1 : c2 : 'b' : ['b']) -> return [c1, c2]
+    _ -> fail "bad"
+
+Replacing the definition for fail, we get:
+
+["aaxybb", "aazwbb", "foobar", "aaccbb", "baz"] >>=
+  \y -> case y of
+    ('a' : 'a' : c1 : c2 : 'b' : ['b']) -> return [c1, c2]
+    _ -> []
+
+If the default definition were used for fail, then the computation would
+halt and throw an error, because "baz" fails the pattern matching and reaches
+the fail case.
 -}
 
 -- Question 4
@@ -184,6 +240,44 @@ Hint: Show that given m = [x1, x2, ...] both expressions evaluate to the same
 thing. Also show this for m = []. Write your answer in a comment, as usual.
 
 Hint: Expand   (++) . k   into an explicit lambda expression.
+
+First, let m = [x1, x2, ...]
+Then, we convert ((++) . k) into an explicit lambda expression:
+(\(x, y) -> [k x] ++ [y])
+
+The first expression evaluates to:
+
+m >>= k = foldr ((++) . k) [] m
+foldr ((++) . k) [] [x1, x2, ...]
+x1 ((++) . k) (foldr ((++) . k) [] [x2, ...])
+(\(x, y) -> [k x] ++ [y]) x1 (foldr (\(x, y) -> [k x] ++ [y]) [] [x2, ...])
+[k x1] ++ (foldr (\(x, y) -> [k x] ++ [y]) [] [x2, ...])
+[k x1] ++ [k x2] ++ (foldr (\(x, y) -> [k x] ++ [y]) [] [x3, ...])
+So we get [k x1, k x2, k x3, ...]
+
+The second expression evaluates to:
+
+m >>= k = concat (map k m)
+concat (map k [x1, x2, ...])
+concat ([k x1, k x2, ...])
+
+The two expressions give us the same answer.
+
+Now, using m = []:
+
+The first expression evaluates to:
+
+foldr ((++) . k) [] []
+foldr (\(x, y) -> [k x] ++ [y]) [] []
+[]
+
+And the second expression evaluates to:
+
+concat (map k [])
+concat []
+[]
+
+Which are also the same result. Therefore, they do compute the same thing.
 -}
 
 -- Question 5
@@ -231,5 +325,7 @@ Sum.hs:11:29:
     In the first argument of `AnyNum', namely `(n + s)'
     In the expression: AnyNum (n + s)
 
-TODO: Explanation
+The two arguments to (+) have to be of the same type, because in the
+Num type class, the signature for (+) is (+) :: (Num a) => a -> a -> a.
+Thus there is no way to fix the code as is.
 -}
