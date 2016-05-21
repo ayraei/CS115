@@ -30,19 +30,21 @@ rank Leaf = 0
 rank (Node _ r _ _) = r
 
 -- Merges two priority queues.
+-- Thanks for the help in refactoring this!
 merge :: Ord a => Pqueue a -> Pqueue a -> Pqueue a
 merge x Leaf = x
 merge Leaf y = y
-merge (Node val1 rank1 left1 right1) y@(Node val2 rank2 _ _)
-  | val1 < val2 && rank1 > rank2 =
-    Node val1 (1 + rank2) left1 (merge right1 y)
-  | val1 < val2 =
-    Node val1 (1 + rank1) (merge right1 y) left1
-merge x@(Node val1 rank1 _ _) (Node val2 rank2 left2 right2)
-  | rank2 > rank1 =
-    Node val2 (1 + rank1) left2 (merge x right2)
-  | otherwise =
-    Node val2 (1 + rank2) (merge x right2) left2
+merge x@(Node val1 rank1 left1 right1) y@(Node val2 rank2 left2 right2) =
+  if val1 < val2
+    then if (rank left1) > (rank mergeY)
+      then Node val1 (1 + rank mergeY) left1 mergeY
+      else Node val1 (1 + rank left1) mergeY left1
+    else if (rank left2) > (rank mergeX)
+      then Node val2 (1 + rank mergeX) left2 mergeX
+      else Node val2 (1 + rank left2) mergeX left2
+  where
+    mergeY = merge right1 y
+    mergeX = merge x right2
 
 -- Insert an item into a priority queue.
 insert :: Ord a => a -> Pqueue a -> Pqueue a
@@ -75,9 +77,9 @@ isValid q@(Node val rnk left right) =
     rnk > 0 &&
     rank left >= rank right &&
     rnk == 1 + rank right &&
-    lessThan val left && lessThan val right &&
+    lessThanEq val left && lessThanEq val right &&
     isValid left && isValid right
     where
-      lessThan :: Ord a => a -> Pqueue a -> Bool
-      lessThan _ Leaf = True
-      lessThan val1 (Node val2 _ _ _) =  val1 < val2
+      lessThanEq :: Ord a => a -> Pqueue a -> Bool
+      lessThanEq _ Leaf = True
+      lessThanEq val1 (Node val2 _ _ _) =  val1 <= val2
