@@ -219,9 +219,9 @@ Evaluate reverse [1, 2, 3]
 --> [3, 2] ++ [1]
 --> [3, 2, 1]
 
-For a list of length n, there are n + 1 substitutions of the recursive case
-of reverse, and n append operations. These operations must be performed
-sequentially, so this definition requires ~2n operations --> O(n).
+For a list of length n, there are n substitutions of the recursive case of
+reverse, and n append operations of up to n operations each. This gives us
+n + n^2 operations ==> O(n^2).
 -}
 
 -- Question 5
@@ -249,13 +249,9 @@ Evaluate head (isort [3, 1, 2, 5, 4])
 --> head (insert 3 (insert 1 (insert 2 (insert 5 (insert 4 [])))))
 --> head (insert 3 (insert 1 (insert 2 (insert 5 [4]))))
 --> head (insert 3 (insert 1 (insert 2 (4 : insert 5 []))))
---> head (insert 3 (insert 1 (insert 2 (4 : [5]))))
---> head (insert 3 (insert 1 (insert 2 [4, 5])))
---> head (insert 3 (insert 1 (2 : [4, 5])))
---> head (insert 3 (insert 1 [2, 4, 5]))
---> head (insert 3 (1 : [2, 4, 5]))
---> head (insert 3 [1, 2, 4, 5])
---> head (1 : insert 3 [2, 4, 5])
+--> head (insert 3 (insert 1 (2 : 4 : insert 5 [])))
+--> head (insert 3 (1 : 2 : 4 : insert 5 []))
+--> head (1 : insert 3 (2 : 4 : insert 5 []))
 --> 1
 -}
 
