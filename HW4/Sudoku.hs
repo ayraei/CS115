@@ -12,7 +12,7 @@ module Main where
 import Control.Monad
 import Data.Array.IO
 import Data.Char
-import Data.List
+--import Data.List
 import System.Environment
 import System.Exit
 import System.IO
@@ -62,29 +62,34 @@ solveSudoku s = iter s (0, 0)
     -- If the board is solveable, return True; if not, return False.
     -- In the latter case the board will not have changed.
     iter :: Sudoku -> (Int, Int) -> IO Bool
-    iter s (x, y) | readArray s (x, y) /= 0 =
-      iter s ((x + 1) `mod` 9, if x == 8 then y + 1 else y)
-    iter s (x, y) = iter' s (x, y) (getOKValues s (x, y))
+    iter _ (9, 0) = return True
+    iter s (x, y) = do
+      v <- readArray s (x, y)
+      if v /= 0 then do
+        iter s (if y == 8 then x + 1 else x, (y + 1) `mod` 9)
+      else do
+        vals <- getOKValues s (x, y)
+        iter' s (x, y) vals
 
     -- Try to solve the board using all possible currently-valid
     -- values at a particular location.
     -- If the board is unsolveable, reset the location to a zero
     -- (unmake the move) and return False.
     iter' :: Sudoku -> (Int, Int) -> [Int] -> IO Bool
+    iter' _ _ _ = return True
+    {-
     iter' s (x, y) [] = do
       writeArray s (x, y) 0
       return False
     iter' s (x, y) (n:ns) = do
       writeArray s (x, y) n
-      let newX = if x /= 8 then x + 1 else 0
-      let newY = if newX == 0 then y + 1 else y
-      if iter s (newX, newY)
+      let newX = if y == 8 then x + 1 else x
+      let newY = (y + 1) `mod` 9
+      b <- iter s (newX, newY)
+      if b
         then return True
         else iter' s (x, y) ns
-{-
-    iter' s (x, y) validMoves =
-      map f (getOKValues s (x, y))
--}
+      -}
 
     -- Get a list of indices that could be in a particular location on the 
     -- board (no conflicts in row, column, or box).
@@ -100,16 +105,15 @@ solveSudoku s = iter s (0, 0)
     -- Return the ith row in a Sudoku board as a list of Ints.
     getRow :: Sudoku -> Int -> IO [Int]
     getRow s row = do
+      if row >= 9
       let l = [0..8]
-      mapM_ (\col -> readArray s (row, col)) l
-      return l
+      mapM (\col -> readArray s (row, col)) l
 
     -- Return the ith column in a Sudoku board as a list of Ints.
     getCol :: Sudoku -> Int -> IO [Int]
     getCol s col = do
       let l = [0..8]
-      mapM_ (\row -> readArray s (row, col)) l
-      return l
+      mapM (\row -> readArray s (row, col)) l
 
     -- Return the box covering location (i, j) as a list of Ints.
     getBox :: Sudoku -> (Int, Int) -> IO [Int]
@@ -121,8 +125,7 @@ solveSudoku s = iter s (0, 0)
              else if y `elem` [3, 4, 5] then [3, 4, 5]
                   else [6, 7, 8]
       let pos = [(row, col) | row <- r, col <- c]
-      mapM_ (\p -> readArray s p) pos
-      return pos
+      mapM (\p -> readArray s p) pos
 
 -- Print a Sudoku board to stdout.
 printSudoku :: Sudoku -> IO ()

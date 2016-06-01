@@ -10,7 +10,7 @@ main =
   getArgs >>=
   \y -> case y of
     -- Filename supplied as argument
-    (filename:_) -> do
+    [filename] -> do
       h <- readFile filename
       let l = lines h
       mapM_ putStrLn (reverse l)
