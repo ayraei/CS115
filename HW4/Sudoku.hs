@@ -64,7 +64,7 @@ solveSudoku s = iter s (0, 0)
     iter :: Sudoku -> (Int, Int) -> IO Bool
     iter _ (9, 0) = return True
     iter s (x, y) = do
-      v <- readArray s (x, y)
+      v <- readArray s (x+1, y+1)
       if v /= 0 then do
         iter s (if y == 8 then x + 1 else x, (y + 1) `mod` 9)
       else do
@@ -76,20 +76,17 @@ solveSudoku s = iter s (0, 0)
     -- If the board is unsolveable, reset the location to a zero
     -- (unmake the move) and return False.
     iter' :: Sudoku -> (Int, Int) -> [Int] -> IO Bool
-    iter' _ _ _ = return True
-    {-
     iter' s (x, y) [] = do
-      writeArray s (x, y) 0
+      writeArray s (x+1, y+1) 0
       return False
     iter' s (x, y) (n:ns) = do
-      writeArray s (x, y) n
+      writeArray s (x+1, y+1) n
       let newX = if y == 8 then x + 1 else x
       let newY = (y + 1) `mod` 9
       b <- iter s (newX, newY)
       if b
         then return True
         else iter' s (x, y) ns
-      -}
 
     -- Get a list of indices that could be in a particular location on the 
     -- board (no conflicts in row, column, or box).
@@ -105,15 +102,14 @@ solveSudoku s = iter s (0, 0)
     -- Return the ith row in a Sudoku board as a list of Ints.
     getRow :: Sudoku -> Int -> IO [Int]
     getRow s row = do
-      if row >= 9
       let l = [0..8]
-      mapM (\col -> readArray s (row, col)) l
+      mapM (\col -> readArray s (row+1, col+1)) l
 
     -- Return the ith column in a Sudoku board as a list of Ints.
     getCol :: Sudoku -> Int -> IO [Int]
     getCol s col = do
       let l = [0..8]
-      mapM (\row -> readArray s (row, col)) l
+      mapM (\row -> readArray s (row+1, col+1)) l
 
     -- Return the box covering location (i, j) as a list of Ints.
     getBox :: Sudoku -> (Int, Int) -> IO [Int]
@@ -124,7 +120,7 @@ solveSudoku s = iter s (0, 0)
       let c = if y `elem` [0, 1, 2] then [0, 1, 2]
              else if y `elem` [3, 4, 5] then [3, 4, 5]
                   else [6, 7, 8]
-      let pos = [(row, col) | row <- r, col <- c]
+      let pos = [(row+1, col+1) | row <- r, col <- c]
       mapM (\p -> readArray s p) pos
 
 -- Print a Sudoku board to stdout.
