@@ -40,7 +40,7 @@ main = do
   -- if args == [] then usage else do
   if (invalidArgs args)
     -- Arguments not positive, or not enough arguments
-    then usage
+    then usaged
     -- Numerical arguments are valid
     else do
       -- Parse out the columns
